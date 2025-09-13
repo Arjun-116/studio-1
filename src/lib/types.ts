@@ -20,3 +20,11 @@ export type Event = {
   imageUrl: string;
   rsvps: number;
 };
+
+export type Message = {
+    id: string;
+    senderId: string;
+    recipientId: string;
+    text: string;
+    timestamp: string;
+}

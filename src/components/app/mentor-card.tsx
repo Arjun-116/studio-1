@@ -1,10 +1,11 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import type { Alumni } from '@/lib/types';
-import { Linkedin } from 'lucide-react';
+import { Linkedin, MessageSquare } from 'lucide-react';
 
 type MentorCardProps = {
   mentor: Alumni;
@@ -34,11 +35,18 @@ export function MentorCard({ mentor }: MentorCardProps) {
                 <h3 className="text-lg font-bold font-headline">{mentor.name}</h3>
                 <p className="text-sm text-muted-foreground">{mentor.currentRole}</p>
               </div>
-              <Button variant="ghost" size="icon" asChild>
-                <a href={mentor.linkedinURL} target="_blank" rel="noopener noreferrer">
-                  <Linkedin className="h-5 w-5 text-muted-foreground hover:text-primary" />
-                </a>
-              </Button>
+              <div className="flex items-center">
+                 <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/alumni-dashboard/messaging?recipientId=${mentor.id}`}>
+                      <MessageSquare className="h-5 w-5 text-muted-foreground hover:text-primary" />
+                    </Link>
+                </Button>
+                <Button variant="ghost" size="icon" asChild>
+                    <a href={mentor.linkedinURL} target="_blank" rel="noopener noreferrer">
+                    <Linkedin className="h-5 w-5 text-muted-foreground hover:text-primary" />
+                    </a>
+                </Button>
+              </div>
             </div>
             <div className="mt-2">
               <div className="flex justify-between items-center mb-1">
