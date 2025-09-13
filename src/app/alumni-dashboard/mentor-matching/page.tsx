@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { Handshake, Loader2 } from 'lucide-react';
 
@@ -11,6 +11,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { findMentorsAction } from '@/lib/actions';
 import { MentorCard } from '@/components/app/mentor-card';
+import type { Alumni } from '@/lib/types';
+
+const ALUMNI_STORAGE_KEY = 'alumni-data';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -33,6 +36,27 @@ function SubmitButton() {
 export default function MentorMatchingPage() {
   const [state, formAction] = useActionState(findMentorsAction, null);
   const { pending } = useFormStatus();
+
+  useEffect(() => {
+    // When new mentors are found, add them to our main alumni list if they don't already exist.
+    if (state?.data) {
+      try {
+        const storedAlumni = localStorage.getItem(ALUMNI_STORAGE_KEY);
+        const alumniList: Alumni[] = storedAlumni ? JSON.parse(storedAlumni) : [];
+        const newMentors = state.data.filter(
+          (mentor: Alumni) => !alumniList.some((alumnus) => alumnus.id === mentor.id)
+        );
+
+        if (newMentors.length > 0) {
+          const updatedList = [...newMentors, ...alumniList];
+          localStorage.setItem(ALUMNI_STORAGE_KEY, JSON.stringify(updatedList));
+        }
+      } catch (error) {
+        console.error("Failed to update alumni list with new mentors:", error);
+      }
+    }
+  }, [state]);
+
 
   return (
     <div className="grid md:grid-cols-3 gap-8">
@@ -91,7 +115,7 @@ export default function MentorMatchingPage() {
         
         {state?.data && state.data.length > 0 && (
           <div className="grid grid-cols-1 gap-6">
-            {state.data.map((mentor) => (
+            {state.data.map((mentor: Alumni) => (
               <MentorCard key={mentor.id} mentor={mentor} />
             ))}
           </div>

@@ -62,12 +62,12 @@ export async function findMentorsAction(prevState: any, formData: FormData) {
         const mentorsWithDetails: Alumni[] = result.mentorMatches.map((mentor, index) => ({
             ...mentor,
             id: mentor.id || `mentor-${Date.now() + index}`,
-            // The AI now provides the avatarUrl directly.
         }));
 
         return {
             message: 'Mentors found successfully.',
             data: mentorsWithDetails,
+            // We are not saving to local storage here anymore, the frontend will handle it if needed.
         };
     } catch (error) {
         console.error(error);
