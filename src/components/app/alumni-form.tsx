@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect } from 'react';
@@ -18,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 const alumniSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
+  avatarUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
   graduationYear: z.coerce.number().min(1900).max(new Date().getFullYear() + 10),
   currentRole: z.string().min(1, 'Current role is required'),
   skills: z.string(),
@@ -47,6 +49,7 @@ export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
     defaultValues: {
       name: alumni?.name || '',
       email: alumni?.email || '',
+      avatarUrl: alumni?.avatarUrl || '',
       graduationYear: alumni?.graduationYear || new Date().getFullYear(),
       currentRole: alumni?.currentRole || '',
       skills: alumni?.skills?.join(', ') || '',
@@ -80,7 +83,7 @@ export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
       id: alumni?.id || Date.now().toString(),
       ...data,
       skills: data.skills.split(',').map((s) => s.trim()).filter(Boolean),
-      avatarUrl: alumni?.avatarUrl || `https://picsum.photos/seed/${Date.now()}/200/200`,
+      avatarUrl: data.avatarUrl || `https://picsum.photos/seed/${Date.now()}/200/200`,
     });
   };
 
@@ -106,6 +109,12 @@ export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
           <Input id="email" type="email" {...register('email')} />
           {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="avatarUrl">Profile Photo URL</Label>
+        <Input id="avatarUrl" {...register('avatarUrl')} placeholder="https://..." />
+        {errors.avatarUrl && <p className="text-sm text-destructive">{errors.avatarUrl.message}</p>}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
