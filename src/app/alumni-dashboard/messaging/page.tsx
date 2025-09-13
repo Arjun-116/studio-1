@@ -109,7 +109,7 @@ export default function MessagingPage() {
     setMessages(updatedMessages);
     setNewMessage('');
 
-    // This is already handled in handleSelectConvo, but as a fallback
+    // Ensure the conversation partner is in the list after sending the first message
     if (!conversations.find(c => c.id === selectedConvo.id)) {
         setConversations(prev => [selectedConvo, ...prev]);
     }
@@ -132,7 +132,7 @@ export default function MessagingPage() {
   return (
     <div className="h-[calc(100vh-100px)]">
       <Card className="h-full grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4">
-        <div className={cn("flex-col border-r", selectedConvo ? 'hidden md:flex' : 'flex')}>
+        <div className={cn("flex flex-col border-r", selectedConvo ? 'hidden md:flex' : 'flex')}>
           <div className="p-4 border-b">
             <h2 className="text-xl font-headline font-bold">Messages</h2>
             <div className="relative mt-2">
@@ -168,9 +168,12 @@ export default function MessagingPage() {
              {searchTerm && searchResults.length === 0 && (
                 <p className="p-4 text-center text-sm text-muted-foreground">No alumni found.</p>
             )}
+            {!searchTerm && conversations.length === 0 && (
+                <p className="p-4 text-center text-sm text-muted-foreground">No conversations. Search for an alumni to start chatting.</p>
+            )}
           </div>
         </div>
-        <div className={cn("md:col-span-2 lg:col-span-3 flex-col", selectedConvo ? 'flex' : 'hidden md:flex')}>
+        <div className={cn("md:col-span-2 lg:col-span-3 flex flex-col", selectedConvo ? 'flex' : 'hidden md:flex')}>
           {selectedConvo && currentUser ? (
             <>
               <CardHeader className="flex-row items-center gap-3 space-y-0 p-4 border-b">
@@ -197,6 +200,9 @@ export default function MessagingPage() {
                   >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={msg.senderId === currentUser.id ? currentUser.avatarUrl : selectedConvo.avatarUrl} />
+                       <AvatarFallback>
+                        {msg.senderId === currentUser.id ? currentUser.name.charAt(0) : selectedConvo.name.charAt(0)}
+                      </AvatarFallback>
                     </Avatar>
                     <p
                       className={cn(
