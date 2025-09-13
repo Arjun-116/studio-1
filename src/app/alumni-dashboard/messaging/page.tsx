@@ -57,7 +57,7 @@ export default function MessagingPage() {
       if (recipientId) {
         const recipient = allAlumni.find((a: Alumni) => a.id === recipientId);
         if (recipient) {
-          handleSelectConvo(recipient);
+          handleSelectConvo(recipient, true);
         }
       } else if (convoUsers.length > 0) {
         handleSelectConvo(convoUsers[0]);
@@ -72,13 +72,19 @@ export default function MessagingPage() {
     return [id1, id2].sort().join('--');
   };
 
-  const handleSelectConvo = (alumni: Alumni) => {
+  const handleSelectConvo = (alumni: Alumni, isNewFromSearch = false) => {
     setSelectedConvo(alumni);
     if (!currentUser) return;
     
+    // Add to conversations list if not already there
+    if (isNewFromSearch && !conversations.find(c => c.id === alumni.id)) {
+        setConversations(prev => [alumni, ...prev]);
+    }
+
     const convoId = getConversationId(currentUser.id, alumni.id);
     const allMessages = JSON.parse(localStorage.getItem(MESSAGES_STORAGE_KEY) || '{}');
     setMessages(allMessages[convoId] || []);
+    setSearchTerm(''); // Clear search after selection
   };
   
   const handleSendMessage = (e: React.FormEvent) => {
@@ -103,9 +109,9 @@ export default function MessagingPage() {
     setMessages(updatedMessages);
     setNewMessage('');
 
-    // Add to conversations list if not already there
+    // This is already handled in handleSelectConvo, but as a fallback
     if (!conversations.find(c => c.id === selectedConvo.id)) {
-        setConversations([selectedConvo, ...conversations]);
+        setConversations(prev => [selectedConvo, ...prev]);
     }
   };
 
@@ -113,13 +119,15 @@ export default function MessagingPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const filteredAlumni = searchTerm
+  const searchResults = searchTerm
     ? alumniList.filter(
         (a) =>
           a.id !== currentUser?.id &&
           a.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : conversations;
+    : [];
+
+  const listToShow = searchTerm ? searchResults : conversations;
 
   return (
     <div className="h-[calc(100vh-100px)]">
@@ -138,10 +146,10 @@ export default function MessagingPage() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto">
-            {filteredAlumni.map((alumni) => (
+            {listToShow.map((alumni) => (
               <div
                 key={alumni.id}
-                onClick={() => handleSelectConvo(alumni)}
+                onClick={() => handleSelectConvo(alumni, !!searchTerm)}
                 className={cn(
                   'flex items-center gap-3 p-3 cursor-pointer hover:bg-accent',
                   selectedConvo?.id === alumni.id && 'bg-accent'
@@ -157,6 +165,9 @@ export default function MessagingPage() {
                 </div>
               </div>
             ))}
+             {searchTerm && searchResults.length === 0 && (
+                <p className="p-4 text-center text-sm text-muted-foreground">No alumni found.</p>
+            )}
           </div>
         </div>
         <div className={cn("md:col-span-2 lg:col-span-3 flex-col", selectedConvo ? 'flex' : 'hidden md:flex')}>
@@ -217,7 +228,7 @@ export default function MessagingPage() {
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center text-muted-foreground">
-              <p>Select a conversation to start messaging</p>
+              <p>Select a conversation or search for an alumni to start messaging</p>
             </div>
           )}
         </div>
