@@ -49,7 +49,7 @@ export default function AlumniSignUpPage() {
                 skills: [],
                 linkedinURL: '',
                 shortBio: 'Please update your bio.',
-                avatarUrl: `https://picsum.photos/seed/${newId}/200/200`,
+                avatarUrl: `https://api.dicebear.com/7.x/initials/json?seed=${name}`,
             };
             
             alumniList.unshift(newUser);

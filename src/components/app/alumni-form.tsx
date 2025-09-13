@@ -1,12 +1,13 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useActionState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Wand2, Loader2 } from 'lucide-react';
+import { Wand2, Loader2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,11 +16,12 @@ import type { Alumni } from '@/lib/types';
 import { enrichAlumniProfile } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 
 const alumniSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address'),
-  avatarUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal('')),
+  avatarUrl: z.string().optional().or(z.literal('')),
   graduationYear: z.coerce.number().min(1900).max(new Date().getFullYear() + 10),
   currentRole: z.string().min(1, 'Current role is required'),
   skills: z.string(),
@@ -36,6 +38,7 @@ type AlumniFormProps = {
 export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
   const { toast } = useToast();
   const [enrichState, enrichFormAction] = useActionState(enrichAlumniProfile, null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(alumni?.avatarUrl || null);
   
   const {
     register,
@@ -73,14 +76,26 @@ export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
       if (name) setValue('name', name);
       if (bio) setValue('shortBio', bio);
       if (skills) setValue('skills', skills.join(', '));
-      // You might want to update graduation year/role based on education if available
     }
   }, [enrichState, setValue, toast]);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result as string;
+        setAvatarPreview(dataUrl);
+        setValue('avatarUrl', dataUrl, { shouldValidate: true });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const onSubmit = (data: z.infer<typeof alumniSchema>) => {
     onSave({
       ...alumni!,
-      id: alumni?.id || Date.now().toString(),
+      id: alumni?.id || `alumni-${Date.now()}`,
       ...data,
       skills: data.skills.split(',').map((s) => s.trim()).filter(Boolean),
       avatarUrl: data.avatarUrl || `https://picsum.photos/seed/${Date.now()}/200/200`,
@@ -111,9 +126,18 @@ export function AlumniForm({ alumni, onSave, onCancel }: AlumniFormProps) {
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="avatarUrl">Profile Photo URL</Label>
-        <Input id="avatarUrl" {...register('avatarUrl')} placeholder="https://..." />
+       <div>
+        <Label>Profile Photo</Label>
+        <div className="flex items-center gap-4">
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={avatarPreview || undefined} alt="Profile preview" />
+            <AvatarFallback>{alumni?.name.charAt(0) || 'A'}</AvatarFallback>
+          </Avatar>
+          <Input id="avatar-upload" type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+          <Button type="button" variant="outline" onClick={() => document.getElementById('avatar-upload')?.click()}>
+            <Upload className="mr-2" /> Upload Image
+          </Button>
+        </div>
         {errors.avatarUrl && <p className="text-sm text-destructive">{errors.avatarUrl.message}</p>}
       </div>
       
